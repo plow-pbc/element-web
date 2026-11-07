@@ -44,10 +44,28 @@
     cursor: pointer;
     align-items: center;
     color: $primary-content;
+
+    .mx_Autocomplete_Completion_title,
+    .mx_Autocomplete_Completion_subtitle,
+    .mx_Autocomplete_Completion_description {
+        /* Ellipsis for long names/subtitles/descriptions, so they stay inside the fixed-height row */
+        flex-shrink: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .mx_Autocomplete_Completion_description {
+        /* Give way well before the title, so a user's name stays readable rather than their ID */
+        flex-shrink: 10;
+    }
 }
 
 .mx_Autocomplete_Completion_pill > * {
     margin-right: 0.3rem;
+    /* The avatar and icons keep their size; only the text gives way in a narrow composer */
+    flex-shrink: 0;
 }
 
 /* styling for common completion elements */
@@ -70,17 +88,6 @@
 @container roomview (height >= 0px) {
     .mx_Autocomplete_Completion_container_pill {
         max-height: 40cqh;
-    }
-}
-
-.mx_Autocomplete_Completion_container_truncate {
-    .mx_Autocomplete_Completion_title,
-    .mx_Autocomplete_Completion_subtitle,
-    .mx_Autocomplete_Completion_description {
-        /* Ellipsis for long names/subtitles/descriptions */
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 }
 

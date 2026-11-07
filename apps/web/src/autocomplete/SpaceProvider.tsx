@@ -28,7 +28,7 @@ export default class SpaceProvider extends RoomProvider {
     public renderCompletions(completions: React.ReactNode[]): React.ReactNode {
         return (
             <div
-                className="mx_Autocomplete_Completion_container_pill mx_Autocomplete_Completion_container_truncate"
+                className="mx_Autocomplete_Completion_container_pill"
                 role="listbox"
                 aria-label={_t("composer|autocomplete|space_a11y")}
             >

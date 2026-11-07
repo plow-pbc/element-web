@@ -201,6 +201,39 @@ test.describe("Composer", () => {
             await expect(page.locator(".mx_EventTile").last().getByTestId("event-tile-slot-body")).toContainText("Bob");
         });
 
+        test.describe("in a narrow timeline", () => {
+            test.use({
+                botCreateOpts: { displayName: "Bob Bartholomew Montgomery-Fitzwilliam the Third" },
+            });
+
+            test(
+                "renders mention autocomplete rows on one line",
+                { tag: "@screenshot" },
+                async ({ page, bot, app }) => {
+                    await app.client.createRoom({ is_direct: true, invite: [bot.credentials!.userId] });
+                    await app.viewRoomByName("Bob Bartholomew Montgomery-Fitzwilliam the Third");
+                    // Leave the timeline about as wide as a thread panel
+                    await page.setViewportSize({ width: 750, height: 800 });
+                    await app.resizeLeftPanel(150);
+
+                    const composer = page.getByRole("textbox", { name: "Send an unencrypted message…" });
+                    await composer.pressSequentially("@bob");
+
+                    const option = page.getByRole("option", { name: new RegExp(bot.credentials!.userId) });
+                    await expect(option).toBeVisible();
+
+                    // The avatar keeps its size and the long name stays inside its row instead of wrapping out of it
+                    const avatarBox = await option.locator(".mx_BaseAvatar").boundingBox();
+                    expect(avatarBox!.width).toBe(24);
+                    const optionBox = await option.boundingBox();
+                    const titleBox = await option.locator(".mx_Autocomplete_Completion_title").boundingBox();
+                    expect(titleBox!.y + titleBox!.height).toBeLessThanOrEqual(optionBox!.y + optionBox!.height);
+
+                    await expect(page.locator("#mx_Autocomplete")).toMatchScreenshot("mention-autocomplete-narrow.png");
+                },
+            );
+        });
+
         test("renders emoji autocomplete", { tag: "@screenshot" }, async ({ page }) => {
             const composer = page.getByRole("textbox", { name: "Send an unencrypted message…" });
 

@@ -67,7 +67,7 @@ export default class NotifProvider extends AutocompleteProvider {
     public renderCompletions(completions: React.ReactNode[]): React.ReactNode {
         return (
             <div
-                className="mx_Autocomplete_Completion_container_pill mx_Autocomplete_Completion_container_truncate"
+                className="mx_Autocomplete_Completion_container_pill"
                 aria-label={_t("composer|autocomplete|notification_a11y")}
             >
                 {completions}
