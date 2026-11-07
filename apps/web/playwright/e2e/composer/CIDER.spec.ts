@@ -11,6 +11,7 @@ import { rejectToastIfExists } from "@element-hq/element-web-playwright-common";
 import { test, expect } from "../../element-web-test";
 import { SettingLevel } from "../../../src/settings/SettingLevel";
 import { getSampleFilePath } from "../../sample-files";
+import { type ElementAppPage } from "../../pages/ElementAppPage";
 
 const CtrlOrMeta = process.platform === "darwin" ? "Meta" : "Control";
 
@@ -218,6 +219,35 @@ test.describe("Composer", () => {
         test("can paste a file", async ({ page, bot, app }) => {
             await app.composerDragAndPasteFile("room", getSampleFilePath("riot.png"), "image/png");
             await expect(page.locator(".mx_ImageBody")).toBeVisible();
+        });
+
+        test.describe("long text", () => {
+            const pasteText = async (app: ElementAppPage, text: string): Promise<void> => {
+                await app.getComposerField(false).evaluate((element, text) => {
+                    const clipboardData = new DataTransfer();
+                    clipboardData.setData("text/plain", text);
+                    element.dispatchEvent(
+                        new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true }),
+                    );
+                }, text);
+            };
+
+            test("offers to send a paste that is too large for a message as a file", async ({ page, app }) => {
+                await pasteText(app, "a".repeat(70000));
+
+                await page.getByRole("dialog").getByRole("button", { name: "Upload" }).click();
+                await expect(page.locator(".mx_EventTile").last().getByText("pasted-text.txt")).toBeVisible();
+            });
+
+            test("explains why a message that is too large failed to send", async ({ page, app }) => {
+                // Small enough to stay in the composer, but too large once sent as an event
+                await pasteText(app, "a".repeat(65000));
+                await app.getComposerField(false).press("Enter");
+
+                const banner = page.getByRole("status").filter({ hasText: "Your message is too large to send" });
+                await expect(banner).toBeVisible();
+                await expect(banner.getByRole("button", { name: "Retry all" })).not.toBeVisible();
+            });
         });
     });
 });

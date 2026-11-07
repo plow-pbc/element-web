@@ -70,6 +70,9 @@ import { type MessageComposerUrlPreviewViewModel } from "../../../viewmodels/com
 import { linksIn } from "../../../utils/UrlUtils";
 import { type MessageComposerUrlPreviewSnapshot } from "@element-hq/web-shared-components";
 
+/** The largest event, in bytes, that the Matrix spec allows a homeserver to accept. */
+const MAX_EVENT_SIZE_BYTES = 65536;
+
 // The prefix used when persisting editor drafts to localstorage.
 export const EDITOR_STATE_STORAGE_PREFIX = "mx_cider_state_";
 
@@ -612,6 +615,15 @@ export class SendMessageComposer extends React.Component<ISendMessageComposerPro
         // it puts the filename in as text/plain which we want to ignore.
         if (data.files.length && !data.types.includes("text/rtf")) {
             void this.props.uploadVm.initiateViaDataTransfer(data);
+            return true; // to skip internal onPaste handler
+        }
+
+        // Text larger than the homeserver accepts for a whole event can never be sent as a message,
+        // so offer to send it as a text file instead.
+        const text = data.getData("text/plain");
+        if (new TextEncoder().encode(text).length > MAX_EVENT_SIZE_BYTES) {
+            const file = new File([text], "pasted-text.txt", { type: "text/plain" });
+            void this.props.uploadVm.initiateViaInputFiles([file]);
             return true; // to skip internal onPaste handler
         }
 

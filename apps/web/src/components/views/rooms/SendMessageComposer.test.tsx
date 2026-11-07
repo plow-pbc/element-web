@@ -33,6 +33,7 @@ import { MessageComposerUrlPreviewViewModel } from "../../../viewmodels/composer
 import { SDKContext } from "../../../contexts/SDKContext.ts";
 import { UrlPreviewApi } from "../../../modules/UrlPreviewApi.ts";
 import { attachUrlPreviews } from "../../../utils/messages";
+import ContentMessages from "../../../ContentMessages";
 
 vi.mock("../../../utils/local-room", () => ({
     doMaybeLocalRoomAction: vi.fn(),
@@ -218,6 +219,28 @@ describe("<SendMessageComposer/>", () => {
                 ),
             });
         };
+
+        it("offers to send pasted text as a file when it is too large to send as a message", async () => {
+            const sendContentListToRoom = vi
+                .spyOn(ContentMessages.sharedInstance(), "sendContentListToRoom")
+                .mockResolvedValue(undefined);
+            const { container } = getComponent();
+            const text = "a".repeat(65537);
+
+            fireEvent.paste(container.querySelector(".mx_BasicMessageComposer_input")!, {
+                clipboardData: {
+                    types: ["text/plain"],
+                    files: [],
+                    getData: (type: string) => (type === "text/plain" ? text : ""),
+                },
+            });
+
+            await waitFor(() => expect(sendContentListToRoom).toHaveBeenCalled());
+            const [file] = sendContentListToRoom.mock.calls[0][0];
+            expect(file.type).toBe("text/plain");
+            expect(await file.text()).toBe(text);
+            expect(container.textContent).toBe("");
+        });
 
         it("renders text and placeholder correctly", () => {
             const { container } = getComponent({ placeholder: "placeholder string" });
