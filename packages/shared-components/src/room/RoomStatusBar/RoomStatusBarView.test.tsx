@@ -13,8 +13,14 @@ import { describe, it, vi, expect } from "vitest";
 
 import * as stories from "./RoomStatusBarView.stories.tsx";
 
-const { WithConnectionLost, WithConsentLink, WithResourceLimit, WithUnsentMessages, WithLocalRoomRetry } =
-    composeStories(stories);
+const {
+    WithConnectionLost,
+    WithConsentLink,
+    WithResourceLimit,
+    WithUnsentMessages,
+    WithMessageTooLarge,
+    WithLocalRoomRetry,
+} = composeStories(stories);
 
 describe("RoomStatusBarView", () => {
     it("renders connection lost", () => {
@@ -55,6 +61,17 @@ describe("RoomStatusBarView", () => {
         const button = getByRole("button", { name: "Retry all" });
         await userEvent.click(button);
         expect(onResendAllClick).toHaveBeenCalled();
+    });
+    it("renders a message that is too large, offering only to delete it", async () => {
+        const onDeleteAllClick = vi.fn();
+        const { container, getByRole, queryByRole } = render(
+            <WithMessageTooLarge onDeleteAllClick={onDeleteAllClick} onResendAllClick={vi.fn()} />,
+        );
+        expect(container).toMatchSnapshot();
+        expect(queryByRole("button", { name: "Retry all" })).toBeNull();
+
+        await userEvent.click(getByRole("button", { name: "Delete all" }));
+        expect(onDeleteAllClick).toHaveBeenCalled();
     });
     it("renders local room error", async () => {
         const onRetryRoomCreationClick = vi.fn();

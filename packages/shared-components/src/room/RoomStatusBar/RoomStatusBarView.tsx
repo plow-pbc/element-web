@@ -57,6 +57,11 @@ export const RoomStatusBarState = {
      */
     UnsentMessages: "UnsentMessages",
     /**
+     * A message failed to send because it is larger than the homeserver accepts. Retrying
+     * can not help, so the user may only delete it.
+     */
+    MessageTooLarge: "MessageTooLarge",
+    /**
      * There was an error creating a room. The user may retry creation.
      */
     LocalRoomFailed: "LocalRoomFailed",
@@ -85,6 +90,9 @@ export interface RoomStatusBarUnsentMessagesState {
     state: "UnsentMessages";
     isResending: boolean;
 }
+export interface RoomStatusBarMessageTooLargeState {
+    state: "MessageTooLarge";
+}
 export interface RoomStatusBarLocalRoomError {
     state: "LocalRoomFailed";
 }
@@ -94,6 +102,7 @@ export type RoomStatusBarViewSnapshot =
     | RoomStatusBarConsentState
     | RoomStatusBarResourceLimitedState
     | RoomStatusBarUnsentMessagesState
+    | RoomStatusBarMessageTooLargeState
     | RoomStatusBarLocalRoomError
     | RoomStatusBarNotVisible;
 
@@ -297,6 +306,36 @@ export function RoomStatusBarView({ vm }: Readonly<RoomStatusBarViewProps>): JSX
                             {_t("room|status_bar|some_messages_not_sent")}
                         </Text>
                         <Text className={styles.description}>{_t("room|status_bar|select_messages_to_retry")}</Text>
+                    </div>
+                </Banner>
+            );
+        case RoomStatusBarState.MessageTooLarge:
+            return (
+                <Banner
+                    role="status"
+                    type="critical"
+                    actions={
+                        vm.onDeleteAllClick && (
+                            <Button
+                                size="md"
+                                kind="secondary"
+                                Icon={DeleteIcon}
+                                className={styles.secondaryAction}
+                                onClick={deleteAllClick}
+                            >
+                                {_t("room|status_bar|delete_all")}
+                            </Button>
+                        )
+                    }
+                    aria-labelledby={bannerTitleId}
+                >
+                    <div className={styles.container}>
+                        <Text className={styles.title} id={bannerTitleId} weight="medium">
+                            {_t("room|status_bar|message_too_large_title")}
+                        </Text>
+                        <Text className={styles.description}>
+                            {_t("room|status_bar|message_too_large_description")}
+                        </Text>
                     </div>
                 </Banner>
             );

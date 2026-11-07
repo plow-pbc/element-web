@@ -112,6 +112,15 @@ export const WithUnsentMessagesSending: Story = {
 };
 
 /**
+ * Rendered when a message failed to send because it is larger than the homeserver accepts.
+ */
+export const WithMessageTooLarge: Story = {
+    args: {
+        state: RoomStatusBarState.MessageTooLarge,
+    },
+};
+
+/**
  * Rendered when a local room has failed to be created.
  */
 export const WithLocalRoomRetry: Story = {

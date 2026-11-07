@@ -119,6 +119,15 @@ describe("RoomStatusBarViewModel", () => {
         });
     });
 
+    it("should resolve state to MessageTooLarge if a pending event has a M_TOO_LARGE error", () => {
+        room.getPendingEvents.mockReturnValue([
+            mkEventWithError(new MatrixError({ errcode: "M_UNKNOWN" })),
+            mkEventWithError(new MatrixError({ errcode: "M_TOO_LARGE" })),
+        ]);
+        roomEmitFn();
+        expect(vm.getSnapshot()).toEqual({ state: RoomStatusBarState.MessageTooLarge });
+    });
+
     it("should resolve state to UnsentMessages if there are any other events", () => {
         room.getPendingEvents.mockReturnValue([mkEventWithError(new MatrixError({ errcode: "M_UNKNOWN" }))]);
         roomEmitFn();
