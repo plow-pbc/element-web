@@ -79,6 +79,7 @@ export class RoomStatusBarViewModel
 
         // Filter through the errors and find the most important error.
         let resourceLimitError: MatrixError | null = null;
+        let tooLarge = false;
         for (const m of unsentMessages) {
             if (m.error?.errcode === "M_CONSENT_NOT_GIVEN") {
                 // This is the most important thing to show, so break here if we find one.
@@ -90,6 +91,9 @@ export class RoomStatusBarViewModel
             if (m.error?.errcode === "M_RESOURCE_LIMIT_EXCEEDED") {
                 resourceLimitError = m.error;
             }
+            if (m.error?.errcode === "M_TOO_LARGE") {
+                tooLarge = true;
+            }
         }
         if (resourceLimitError) {
             return {
@@ -97,6 +101,9 @@ export class RoomStatusBarViewModel
                 resourceLimit: resourceLimitError.data.limit_type ?? "",
                 adminContactHref: resourceLimitError.data.admin_contact,
             };
+        }
+        if (tooLarge) {
+            return { state: RoomStatusBarState.MessageTooLarge };
         }
         // Otherwise, we know there are unsent messages but the error is not special.
         return {

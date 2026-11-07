@@ -57,6 +57,11 @@ export const RoomStatusBarState = {
      */
     UnsentMessages: "UnsentMessages",
     /**
+     * A message failed to send because it is larger than the homeserver accepts. Retrying
+     * can not help, so the user may only delete it.
+     */
+    MessageTooLarge: "MessageTooLarge",
+    /**
      * There was an error creating a room. The user may retry creation.
      */
     LocalRoomFailed: "LocalRoomFailed",
@@ -85,6 +90,9 @@ export interface RoomStatusBarUnsentMessagesState {
     state: "UnsentMessages";
     isResending: boolean;
 }
+export interface RoomStatusBarMessageTooLargeState {
+    state: "MessageTooLarge";
+}
 export interface RoomStatusBarLocalRoomError {
     state: "LocalRoomFailed";
 }
@@ -94,6 +102,7 @@ export type RoomStatusBarViewSnapshot =
     | RoomStatusBarConsentState
     | RoomStatusBarResourceLimitedState
     | RoomStatusBarUnsentMessagesState
+    | RoomStatusBarMessageTooLargeState
     | RoomStatusBarLocalRoomError
     | RoomStatusBarNotVisible;
 
@@ -256,12 +265,15 @@ export function RoomStatusBarView({ vm }: Readonly<RoomStatusBarViewProps>): JSX
                 </Banner>
             );
         case RoomStatusBarState.UnsentMessages:
+        case RoomStatusBarState.MessageTooLarge: {
+            // Retrying a message that is too large can never succeed, so only offer to delete it
+            const canRetry = snapshot.state === RoomStatusBarState.UnsentMessages;
             return (
                 <Banner
                     role="status"
                     type="critical"
                     actions={
-                        snapshot.isResending ? (
+                        canRetry && snapshot.isResending ? (
                             <InlineSpinner />
                         ) : (
                             <>
@@ -276,7 +288,7 @@ export function RoomStatusBarView({ vm }: Readonly<RoomStatusBarViewProps>): JSX
                                         {_t("room|status_bar|delete_all")}
                                     </Button>
                                 )}
-                                {vm.onResendAllClick && (
+                                {canRetry && vm.onResendAllClick && (
                                     <Button
                                         size="md"
                                         kind="primary"
@@ -294,12 +306,19 @@ export function RoomStatusBarView({ vm }: Readonly<RoomStatusBarViewProps>): JSX
                 >
                     <div className={styles.container}>
                         <Text className={styles.title} id={bannerTitleId} weight="medium">
-                            {_t("room|status_bar|some_messages_not_sent")}
+                            {canRetry
+                                ? _t("room|status_bar|some_messages_not_sent")
+                                : _t("room|status_bar|message_too_large_title")}
                         </Text>
-                        <Text className={styles.description}>{_t("room|status_bar|select_messages_to_retry")}</Text>
+                        <Text className={styles.description}>
+                            {canRetry
+                                ? _t("room|status_bar|select_messages_to_retry")
+                                : _t("room|status_bar|message_too_large_description")}
+                        </Text>
                     </div>
                 </Banner>
             );
+        }
         default:
             // We should never get into this state.
             return null;
