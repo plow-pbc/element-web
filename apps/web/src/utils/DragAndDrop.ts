@@ -18,16 +18,16 @@ export function isFileDrag(dataTransfer: DataTransfer | null): boolean {
 }
 
 /**
- * Call `onFileDrag` whenever a file drag enters the window. Menus use this to close themselves,
- * as their full-screen background (or a modal menu's `pointer-events: none` on the body) would
- * otherwise take the drop away from the room's file drop target.
- * @param onFileDrag - called on each file `dragenter`
- * @returns a function that removes the listener
+ * Window `dragenter` listener (capture) that closes the menu a file drag lands on, so the drop reaches the room.
+ * An open menu's overlay is what takes the drop: a {@link ContextMenu}'s full-screen background, or `<html>`
+ * under a modal Radix menu (every compound-web `Menu`), which sets `pointer-events: none` on the body.
+ * Both kinds of menu close on a click outside, so the drag clicks the overlay it landed on.
+ * @param ev - the `dragenter` event
  */
-export function onFileDragEnterWindow(onFileDrag: () => void): () => void {
-    const listener = (ev: DragEvent): void => {
-        if (isFileDrag(ev.dataTransfer)) onFileDrag();
-    };
-    window.addEventListener("dragenter", listener, true);
-    return () => window.removeEventListener("dragenter", listener, true);
+export function closeMenuUnderFileDrag(ev: DragEvent): void {
+    if (!isFileDrag(ev.dataTransfer)) return;
+    const overlay = ev.target as HTMLElement;
+    if (overlay !== document.documentElement && !overlay.classList.contains("mx_ContextualMenu_background")) return;
+    overlay.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); // Radix dismisses on pointerdown
+    overlay.click(); // ContextMenu closes on a click on its background
 }

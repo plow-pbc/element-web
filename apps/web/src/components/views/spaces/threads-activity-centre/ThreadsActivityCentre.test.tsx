@@ -10,7 +10,7 @@
 
 import { vi, describe, it, expect, beforeAll, afterEach } from "vitest";
 import React, { type ComponentProps } from "react";
-import { fireEvent, render, screen } from "test-utils-rtl";
+import { render, screen } from "test-utils-rtl";
 import userEvent from "@testing-library/user-event";
 import { stubClient } from "test-utils";
 import { populateThread } from "test-utils/threads";
@@ -191,15 +191,6 @@ describe("ThreadsActivityCentre", () => {
         renderTAC();
         await userEvent.click(getTACButton());
         expect(getTACMenu()).toBeInTheDocument();
-    });
-
-    it("should close the menu when a file is dragged into the window, so the drop reaches the room", async () => {
-        renderTAC();
-        await userEvent.click(getTACButton());
-        expect(getTACMenu()).toBeInTheDocument();
-
-        fireEvent.dragEnter(document.documentElement, { dataTransfer: { types: ["Files"] } });
-        expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     });
 
     it("should show My threads tab by default with participated threads", async () => {

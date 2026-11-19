@@ -6,7 +6,7 @@
  * Please see LICENSE files in the repository root for full details.
  */
 
-import React, { type JSX, useEffect, useState } from "react";
+import React, { type JSX, useState } from "react";
 import { Menu, MenuItem, NavBar, NavItem, Text } from "@vector-im/compound-web";
 import { NotificationDecoration, type NotificationDecorationData } from "@element-hq/web-shared-components";
 
@@ -25,7 +25,6 @@ import { getSenderName } from "../../../../stores/message-preview/previews/utils
 import PosthogTrackers from "../../../../PosthogTrackers";
 import { getKeyBindingsManager } from "../../../../KeyBindingsManager";
 import { KeyBindingAction } from "../../../../accessibility/KeyboardShortcuts";
-import { onFileDragEnterWindow } from "../../../../utils/DragAndDrop";
 
 interface ThreadsActivityCentreProps {
     /**
@@ -69,9 +68,6 @@ export function ThreadsActivityCentre({ displayButtonLabel }: ThreadsActivityCen
     const [open, setOpen] = useState(false);
     const [view, setView] = useState<TACView>("my_threads");
     const roomsAndNotifications = useUnreadThreadRooms(open);
-    // The modal menu sets `pointer-events: none` on the body, which would send a file drop to the
-    // page instead of the room, so close it when a file drag starts.
-    useEffect(() => (open ? onFileDragEnterWindow(() => setOpen(false)) : undefined), [open]);
 
     const { threads: activeThreads, emptyCaption: activeEmptyCaption } = getActiveTabContent(
         view,
