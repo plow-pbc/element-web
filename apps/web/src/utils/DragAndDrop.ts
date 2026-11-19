@@ -16,3 +16,18 @@ export function isFileDrag(dataTransfer: DataTransfer | null): boolean {
         (dataTransfer.types.includes("Files") || dataTransfer.types.includes("application/x-moz-file"))
     );
 }
+
+/**
+ * Call `onFileDrag` whenever a file drag enters the window. Menus use this to close themselves,
+ * as their full-screen background (or a modal menu's `pointer-events: none` on the body) would
+ * otherwise take the drop away from the room's file drop target.
+ * @param onFileDrag - called on each file `dragenter`
+ * @returns a function that removes the listener
+ */
+export function onFileDragEnterWindow(onFileDrag: () => void): () => void {
+    const listener = (ev: DragEvent): void => {
+        if (isFileDrag(ev.dataTransfer)) onFileDrag();
+    };
+    window.addEventListener("dragenter", listener, true);
+    return () => window.removeEventListener("dragenter", listener, true);
+}

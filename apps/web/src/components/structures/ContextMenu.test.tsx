@@ -10,7 +10,7 @@ Please see LICENSE files in the repository root for full details.
 
 import React from "react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render } from "test-utils-rtl";
+import { fireEvent, render } from "test-utils-rtl";
 
 import ContextMenu, { toRightOf, ChevronFace } from "./ContextMenu";
 import UIStore from "../../stores/UIStore";
@@ -192,6 +192,20 @@ describe("ContextMenu", () => {
 
             expect(onFinished).not.toHaveBeenCalled();
             Modal.createDialog(BaseDialog);
+            expect(onFinished).toHaveBeenCalled();
+        });
+
+        it("should close when a file is dragged into the window, so the drop reaches the room", () => {
+            const onFinished = vi.fn();
+            render(
+                <ContextMenu top={0} left={0} onFinished={onFinished}>
+                    <React.Fragment />
+                </ContextMenu>,
+            );
+
+            fireEvent.dragEnter(document.body, { dataTransfer: { types: ["text/plain"] } });
+            expect(onFinished).not.toHaveBeenCalled();
+            fireEvent.dragEnter(document.body, { dataTransfer: { types: ["Files"] } });
             expect(onFinished).toHaveBeenCalled();
         });
 

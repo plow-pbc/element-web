@@ -28,6 +28,7 @@ import { checkInputableElement, RovingTabIndexProvider } from "../../accessibili
 import { KeyBindingAction } from "../../accessibility/KeyboardShortcuts";
 import { getKeyBindingsManager } from "../../KeyBindingsManager";
 import Modal, { ModalManagerEvent } from "../../Modal";
+import { onFileDragEnterWindow } from "../../utils/DragAndDrop";
 
 // Shamelessly ripped off Modal.js.  There's probably a better way
 // of doing reusable widgets like dialog boxes & menus where we go and
@@ -118,6 +119,7 @@ interface IState {
 // this will allow the ContextMenu to manage its own focus using arrow keys as per the ARIA guidelines.
 export default class ContextMenu extends React.PureComponent<React.PropsWithChildren<IProps>, IState> {
     private readonly initialFocus: HTMLElement;
+    private removeFileDragListener?: () => void;
 
     public static defaultProps = {
         hasBackground: true,
@@ -135,10 +137,13 @@ export default class ContextMenu extends React.PureComponent<React.PropsWithChil
 
     public componentDidMount(): void {
         Modal.on(ModalManagerEvent.Opened, this.onModalOpen);
+        // Close on a file drag so our background doesn't swallow the drop meant for the room
+        this.removeFileDragListener = onFileDragEnterWindow(() => this.props.onFinished?.());
     }
 
     public componentWillUnmount(): void {
         Modal.off(ModalManagerEvent.Opened, this.onModalOpen);
+        this.removeFileDragListener?.();
         // return focus to the thing which had it before us
         this.initialFocus.focus();
     }
