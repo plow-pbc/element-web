@@ -13,6 +13,7 @@ import { useViewModel } from "@element-hq/web-shared-components";
 import { _t } from "../../languageHandler";
 import UploadBigSvg from "../../../res/img/upload-big.svg";
 import { useRoomUploadViewModel } from "../../viewmodels/room/RoomUploadViewModel";
+import { isFileDrag } from "../../utils/DragAndDrop";
 
 interface IProps {
     parent: HTMLElement | null;
@@ -43,14 +44,7 @@ const FileDropTarget: React.FC<IProps> = ({ parent }) => {
                 // We always increment the counter no matter the types, because dragging is
                 // still happening. If we didn't, the drag counter would get out of sync.
                 counter: state.counter + 1,
-                // See:
-                // https://docs.w3cub.com/dom/datatransfer/types
-                // https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/Recommended_drag_types#file
-                dragging:
-                    ev.dataTransfer!.types.includes("Files") ||
-                    ev.dataTransfer!.types.includes("application/x-moz-file")
-                        ? true
-                        : state.dragging,
+                dragging: isFileDrag(ev.dataTransfer) || state.dragging,
             }));
         };
 
@@ -69,14 +63,7 @@ const FileDropTarget: React.FC<IProps> = ({ parent }) => {
             ev.preventDefault();
             if (!ev.dataTransfer) return;
 
-            ev.dataTransfer.dropEffect = "none";
-
-            // See:
-            // https://docs.w3cub.com/dom/datatransfer/types
-            // https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/Recommended_drag_types#file
-            if (ev.dataTransfer.types.includes("Files") || ev.dataTransfer.types.includes("application/x-moz-file")) {
-                ev.dataTransfer.dropEffect = "copy";
-            }
+            ev.dataTransfer.dropEffect = isFileDrag(ev.dataTransfer) ? "copy" : "none";
         };
 
         const onDrop = (ev: DragEvent): void => {
